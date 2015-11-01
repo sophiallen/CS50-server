@@ -145,19 +145,55 @@ int main(int argc, char* argv[])
             // log request-line
             printf("%s", line);
 
-            // TODO: validate request-line
-            char* ptr1 = strchr(line, ' ');
-            char* ptr2 = strchr(line+1, ' ');
+        // TODO: validate request-line
             
-            //*check for correct number of spaces
-            if (ptr1==NULL || ptr2 == NULL || strchr(ptr2+1, ' ')!=NULL)
-            {
-                error(400);    
-            }
-            if (strstr(line, "\r\n") == NULL)
+            //ptr after method, before request: 
+            char* SP1 = strchr(line, ' ');
+                
+            //ptr after request, before HTTP
+            char* SP2 = strchr(SP1+1, ' ');
+            
+            //ptr after HTTP, start of CRLF
+            char* CRLF = strstr(line, "\r\n");
+            
+            //check for nulls
+            if(SP1 == NULL || SP2 == NULL || CRLF == NULL)
             {
                 error(400);
             }
+            
+            //calculate length of sub-strings
+            int methodsize = abs(SP1-line);
+            int targetsize = abs(SP2-SP1+1);
+            int httpsize = abs(CRLF-SP2+1);
+            
+            //storage for substrings
+            char method[methodsize];
+            char target[targetsize];
+            char http[httpsize];
+
+            //copy substrings
+            strncpy(method, line, methodsize);
+            strncpy(target, SP1+1, targetsize-1);
+            strncpy(http, SP2+1, httpsize-1);
+            
+            //check for correct method
+            char* GET = "GET";
+            if (strcmp(method, GET) != 0)
+            {
+                error(405);
+            }
+            else if (strchr(method, ' ') != NULL)
+            {
+                error(400);
+            }
+            //check for correct absolute-path
+            if (target[0] != '/')
+            {
+                error(501);
+            }
+            
+            char * ext = strchr(
             
 
             // TODO: extract query from request-target
